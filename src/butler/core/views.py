@@ -1,10 +1,12 @@
+from base64 import b64decode
+
 from django.conf import settings
 from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from . import models
+from . import models, serializers
 
 
 class ShortenerRedirectView(APIView):
@@ -34,3 +36,28 @@ class ShortenerView(APIView):
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"url": resp_url})
+
+
+class CommentsView(APIView):
+    def get(self, request):
+        data = request.query_params
+        b64key = data.get("b64key")
+        if not b64key:
+            key = data.get("key")
+            if not key:
+                return Response(
+                    {"error": "bad key"}, status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            key = str(b64decode(b64key), "utf-8")
+        page = int(data.get("page", 1))
+        page_size = int(data.get("page_size", 10))
+        return Response(
+            {"comments": models.Comment.comments(key, page, page_size)}
+        )
+
+    def post(self, request):
+        data = serializers.CommentSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        data.save()
+        return Response({"detail": "inserted"})

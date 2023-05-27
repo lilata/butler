@@ -1,3 +1,4 @@
+import math
 import random
 import string
 
@@ -6,7 +7,6 @@ from django.db import models
 
 from . import utils
 
-# Create your models here.
 alias_chars = string.ascii_letters + string.digits + "-_~"
 alias_chars_len = len(alias_chars)
 
@@ -36,3 +36,34 @@ class ShortenedURL(models.Model):
             return cls.objects.get(url=url)
         except cls.DoesNotExist:
             return cls.objects.create(url=url, alias=generate_url_alias())
+
+
+class Comment(models.Model):
+    key = models.CharField(max_length=255)
+    poster = models.CharField(max_length=100)
+    text = models.TextField()
+    inserted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-inserted_at",)
+
+    @classmethod
+    def add_comment(cls, key, poster, text):
+        return cls.objects.create(key=key, poster=poster, text=text)
+
+    @classmethod
+    def comments(cls, key, page=1, page_size=10) -> dict:
+        from . import serializers
+
+        comments = cls.objects.filter(key=key).all()[
+            (page - 1) * page_size : page * page_size
+        ]
+        return serializers.CommentSerializer(comments, many=True).data
+
+    @classmethod
+    def page_count(cls, key, page_size=10) -> int:
+        return math.ceil(cls.objects.filter(key=key).count() / page_size)
+
+class ProtectedFile(models.Model):
+    code = models.TextField()
+    file = models.FileField()
