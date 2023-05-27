@@ -144,3 +144,4 @@ SHORTENER_MIN_LENGTH = 3
 SHORTENER_PREFIX_URL = "https://b.waifoo.net/s/"
 
 PROTECTED_FILE_UPLOAD_DIR = "protected"
+PROTECTED_FILE_PREVIEWABLES = ("application/pdf", "text/plain", )

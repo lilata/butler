@@ -84,9 +84,11 @@ class ProtectedFileView(APIView):
         code = request.query_params.get("code")
         file_obj = models.ProtectedFile.get_file(filename, code)
         if file_obj is not None:
+            file_type = guess_type(filename)[0]
             response = StreamingHttpResponse(
-                file_obj.file.chunks(), guess_type(filename)[0]
+                file_obj.file.chunks(), file_type
             )
-            response["Content-Disposition"] = f"attachment; filename={filename}"
+            if file_type not in settings.PROTECTED_FILE_PREVIEWABLES:
+                response["Content-Disposition"] = f"attachment; filename={filename}"
             return response
         return Response({"error": "404 Not Found"}, status=status.HTTP_404_NOT_FOUND)
