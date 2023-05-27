@@ -1,6 +1,8 @@
 import math
+import os
 import random
 import string
+import uuid
 
 from django.conf import settings
 from django.db import models
@@ -64,6 +66,21 @@ class Comment(models.Model):
     def page_count(cls, key, page_size=10) -> int:
         return math.ceil(cls.objects.filter(key=key).count() / page_size)
 
+
+def protected_file_upload_to(instance, filename):
+    dir_name = settings.PROTECTED_FILE_UPLOAD_DIR
+    os.makedirs(dir_name, exist_ok=True)
+    return f"{dir_name}/{filename}"
+
+
 class ProtectedFile(models.Model):
     code = models.TextField()
-    file = models.FileField()
+    file = models.FileField(upload_to=protected_file_upload_to)
+
+    @classmethod
+    def get_file(cls, filename, code):
+        path = f"{settings.PROTECTED_FILE_UPLOAD_DIR}/{filename}"
+        f = cls.objects.filter(file=path).first()
+        if f is not None and f.code == code:
+            return f
+        return None

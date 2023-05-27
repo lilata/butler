@@ -1,8 +1,12 @@
+import os
 from base64 import b64decode
+from mimetypes import guess_type
 
 from django.conf import settings
+from django.http import StreamingHttpResponse
 from django.shortcuts import redirect
 from rest_framework import status
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -52,12 +56,37 @@ class CommentsView(APIView):
             key = str(b64decode(b64key), "utf-8")
         page = int(data.get("page", 1))
         page_size = int(data.get("page_size", 10))
-        return Response(
-            {"comments": models.Comment.comments(key, page, page_size)}
-        )
+        return Response({"comments": models.Comment.comments(key, page, page_size)})
 
     def post(self, request):
         data = serializers.CommentSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         data.save()
         return Response({"detail": "inserted"})
+
+
+class ProtectedFileView(APIView):
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
+
+    def post(self, request):
+        data = serializers.ProtectedFileSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        protected_file = data.save()
+        return Response(
+            {
+                "detail": "uploaded",
+                "filename": os.path.basename(protected_file.file.name),
+            }
+        )
+
+    def get(self, request):
+        filename = request.query_params.get("filename")
+        code = request.query_params.get("code")
+        file_obj = models.ProtectedFile.get_file(filename, code)
+        if file_obj is not None:
+            response = StreamingHttpResponse(
+                file_obj.file.chunks(), guess_type(filename)[0]
+            )
+            response["Content-Disposition"] = f"attachment; filename={filename}"
+            return response
+        return Response({"error": "404 Not Found"}, status=status.HTTP_404_NOT_FOUND)
