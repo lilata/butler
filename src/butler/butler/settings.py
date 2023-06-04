@@ -28,7 +28,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 
-ALLOWED_HOSTS = [env("HOST", default="localhost")]
+ALLOWED_HOSTS = env("HOST", default="localhost").split()
 
 
 INSTALLED_APPS = [
