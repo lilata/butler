@@ -61,6 +61,7 @@ ROOT_URLCONF = "butler.urls"
 CORS_ALLOWED_ORIGINS = (
     "http://localhost:8000",
     "http://localhost:4200",  # angular
+    env("FE_HOST", default="https://butler-fe.waifoo.net"),
 )
 
 TEMPLATES = [
