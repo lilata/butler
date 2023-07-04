@@ -61,7 +61,7 @@ ROOT_URLCONF = "butler.urls"
 CORS_ALLOWED_ORIGINS = (
     "http://localhost:8000",
     "http://localhost:4200",  # angular
-    env("FE_HOST", default="https://butler-fe.waifoo.net"),
+    env("FE_HOST", default="https://butler-fe.iatyl.com"),
 )
 
 TEMPLATES = [
@@ -141,7 +141,7 @@ REST_FRAMEWORK = {
 }
 
 SHORTENER_MIN_LENGTH = 3
-SHORTENER_PREFIX_URL = "https://b.waifoo.net/s/"
+SHORTENER_PREFIX_URL = "https://b.iatyl.com/s/"
 
 PROTECTED_FILE_UPLOAD_DIR = "protected"
 PROTECTED_FILE_PREVIEWABLES = ("application/pdf", "text/plain", )
